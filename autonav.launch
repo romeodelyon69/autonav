@@ -1,0 +1,5 @@
+<launch>
+    <!-- Lancement du nœud scheduler -->
+    <node pkg="autonav" type="scheduler.py" name="scheduler" output="screen" />
+
+</launch>
