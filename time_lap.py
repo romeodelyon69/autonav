@@ -28,15 +28,9 @@ class LapTime:
 
         self.scheduler = rospy.Publisher('scheduler', String, queue_size=10)
 
+        self.creation_time = time.time()
+
     def callback(self, data):
-        if self.nb_lap == 2:                                                        #it should kill this process and the other process with this one 
-            msg = String()
-            msg.data = "TIME_LAP"
-            self.scheduler.publish(msg)
-            subprocess.Popen(["rosrun", "map_server", "map_saver", "-f", "mymap"])  #the idea is that we use two laps two build a map so at the end we have to save it
-
-            self.nb_lap = -1
-
         cur_x = data.pose.position.x
         cur_y = data.pose.position.y
         t = rospy.Time.from_sec(time.time())
@@ -46,10 +40,15 @@ class LapTime:
         if (dist < 1):
             if (self.prev_x < self.start_x) and (cur_x > self.start_x):
                 print("New Lap")
-                if (self.prev_time != 0.0):
+                if (self.prev_time != 0.0 or (time.time() - self.creation_time) > 10):
                     print(f"Lap_time: {cur_time - self.prev_time:.3f}s")
+                    self.nb_lap += 1
                 self.prev_time = cur_time
-                self.nb_lap += 1
+
+                msg = String()
+                msg.data = "TIME_LAP" + str(self.nb_lap)
+                self.scheduler.publish(msg)
+               
         self.prev_x  = cur_x
         self.prev_y = cur_y
 
